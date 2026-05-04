@@ -1,5 +1,22 @@
 import OpenAI from "openai";
 
+// 20 requests per IP per 10 minutes
+const RATE_LIMIT = 20;
+const WINDOW_MS = 10 * 60 * 1000;
+const ipMap = new Map();
+
+function isRateLimited(ip) {
+  const now = Date.now();
+  const entry = ipMap.get(ip);
+  if (!entry || now > entry.reset) {
+    ipMap.set(ip, { count: 1, reset: now + WINDOW_MS });
+    return false;
+  }
+  if (entry.count >= RATE_LIMIT) return true;
+  entry.count++;
+  return false;
+}
+
 const CARS = [
   { id:1,  brand:"Dacia",        model:"Sandero Expression ECO-G 100",          year:2025, km:0,      price:16590, fuel:"LPG/Αέριο",     trans:"Χειροκίνητο", body:"Hatchback",  seats:5, url:"https://npoulakis.gr/used/car/dacia-sandero-2025-999cc-49518",      img:"https://s3-eu-west-1.amazonaws.com/i1.icdn24.gr/thumbnail_portrait/49518/478866.JPG" },
   { id:2,  brand:"Dacia",        model:"Sandero Stepway Essential ECO-G 100",   year:2025, km:0,      price:16890, fuel:"LPG/Αέριο",     trans:"Χειροκίνητο", body:"Hatchback",  seats:5, url:"https://npoulakis.gr/used/car/dacia-sandero-2025-999cc-51741",      img:"https://s3-eu-west-1.amazonaws.com/i1.icdn24.gr/thumbnail_portrait/51741/453756.JPG" },
@@ -89,6 +106,14 @@ ${INVENTORY_TEXT}`;
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  const ip = req.headers["x-forwarded-for"]?.split(",")[0].trim() || req.socket.remoteAddress || "unknown";
+  if (isRateLimited(ip)) {
+    return res.status(429).json({
+      reply: "Έχετε στείλει πολλά μηνύματα σύντομα. Παρακαλώ περιμένετε λίγα λεπτά.",
+      car_ids: [],
+    });
   }
 
   const { messages } = req.body;
