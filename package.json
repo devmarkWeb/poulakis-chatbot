@@ -1,0 +1,11 @@
+{
+  "name": "poulakis-chatbot",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "openai": "^4.47.1"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

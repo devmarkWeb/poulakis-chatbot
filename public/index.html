@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Poulakis – Find your Car</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+
+/* ══════════════════════════════════════════
+   AI POULAKIS — PREMIUM UI v2
+══════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #050916;
+  --surface: rgba(10,16,34,.76);
+  --surface2: rgba(15,24,48,.82);
+  --stroke: rgba(255,255,255,.09);
+  --stroke2: rgba(240,192,64,.28);
+  --gold: #f6c64a;
+  --gold2: #d4a017;
+  --gold3: #ffe08a;
+  --gold-faint: rgba(246,198,74,.12);
+  --gold-glow: rgba(246,198,74,.28);
+  --text: #edf4ff;
+  --muted: #8896b8;
+  --green: #22c55e;
+  --blue: #3b5bdb;
+  --r: 22px;
+  --ease-spring: cubic-bezier(.34,1.4,.64,1);
+  --ease-out: cubic-bezier(.22,1,.36,1);
+}
+
+html, body {
+  min-height: 100%;
+  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-feature-settings: 'cv02','cv03','cv04';
+  -webkit-font-smoothing: antialiased;
+  background:
+    linear-gradient(rgba(5,10,20,.32), rgba(5,10,20,.62)),
+    url('background.jpg') center/cover no-repeat fixed;
+  color: var(--text);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: rgba(5,9,22,.7); }
+::-webkit-scrollbar-thumb { background: rgba(246,198,74,.22); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(246,198,74,.44); }
+
+/* Ambient background */
+body::before {
+  content: "";
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 14%, rgba(53,92,255,.20), transparent 42%),
+    radial-gradient(circle at 14% 78%, rgba(246,198,74,.10), transparent 34%),
+    radial-gradient(circle at 88% 58%, rgba(53,92,255,.08), transparent 30%),
+    linear-gradient(180deg, rgba(3,7,18,.52), rgba(3,7,18,.08) 50%, rgba(3,7,18,.52));
+}
+
+/* Grid overlay */
+body::after {
+  content: "";
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255,255,255,.020) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.020) 1px, transparent 1px);
+  background-size: 50px 50px;
+  mask-image: linear-gradient(to bottom, transparent, black 20%, transparent 84%);
+}
+
+/* ══════════════════════════════════════════
+   HEADER
+══════════════════════════════════════════ */
+header {
+  position: sticky; top: 0; z-index: 300;
+  height: 70px;
+  padding: 0 clamp(16px, 4vw, 44px);
+  display: flex; align-items: center; gap: 14px;
+  background: rgba(5,9,22,.70);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+
+/* Gradient accent line under header */
+header::after {
+  content: "";
+  position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(246,198,74,.55) 28%,
+    rgba(53,92,255,.38) 62%,
+    transparent 100%
+  );
+}
+
+.h-logo {
+  width: 46px; height: 46px; border-radius: 13px;
+  display: grid; place-items: center; overflow: hidden;
+  background: linear-gradient(145deg, rgba(246,198,74,.14), rgba(53,92,255,.07));
+  border: 1px solid rgba(246,198,74,.22);
+  box-shadow: 0 6px 20px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.07);
+}
+.h-logo img {
+  width: 148%; height: 148%;
+  object-fit: cover; object-position: center 20%;
+}
+
+.h-titles h1 {
+  font-size: clamp(.94rem, 2vw, 1.28rem);
+  font-weight: 800; letter-spacing: -.032em; line-height: 1.08;
+  background: linear-gradient(132deg, var(--gold3) 0%, var(--gold) 55%, #e8ab30 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.h-titles p {
+  margin-top: 3px; font-size: .72rem; font-weight: 500;
+  color: rgba(237,244,255,.55); letter-spacing: .01em;
+}
+
+.h-online {
+  margin-left: auto;
+  display: flex; align-items: center; gap: 7px;
+  color: var(--green); font-size: .70rem; font-weight: 700;
+  letter-spacing: .07em; text-transform: uppercase;
+  padding: 8px 14px; border-radius: 999px;
+  background: rgba(34,197,94,.08);
+  border: 1px solid rgba(34,197,94,.18);
+}
+.h-dot {
+  width: 8px; height: 8px; border-radius: 999px;
+  background: var(--green);
+  box-shadow: 0 0 10px rgba(34,197,94,.9), 0 0 22px rgba(34,197,94,.38);
+  animation: pulseDot 2s ease-in-out infinite;
+}
+@keyframes pulseDot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(.65); opacity: .48; }
+}
+
+/* ══════════════════════════════════════════
+   APP SHELL
+══════════════════════════════════════════ */
+.app-shell {
+  position: relative; z-index: 2;
+  width: min(1040px, 100%); margin: 0 auto;
+  padding: 24px 18px 140px;
+}
+
+/* ══════════════════════════════════════════
+   HERO
+══════════════════════════════════════════ */
+.hero {
+  position: relative;
+  min-height: 430px;
+  display: grid; place-items: end center;
+  padding-top: 26px; margin-bottom: 22px;
+}
+
+/* Soft glow behind mascot */
+.hero::before {
+  content: "";
+  position: absolute;
+  width: min(740px, 88vw); height: 230px; bottom: 12px;
+  border-radius: 999px;
+  background: radial-gradient(ellipse at center, rgba(246,198,74,.17), rgba(53,92,255,.13) 50%, transparent 72%);
+  filter: blur(30px); opacity: .88;
+}
+
+.hero-mascot {
+  position: relative; z-index: 2;
+  width: min(315px, 58vw);
+  margin-bottom: -30px;
+  filter:
+    drop-shadow(0 28px 52px rgba(0,0,0,.78))
+    drop-shadow(0 0 28px rgba(246,198,74,.18))
+    drop-shadow(0 -2px 18px rgba(53,92,255,.10));
+  animation: mascotFloat 5s ease-in-out infinite;
+}
+@keyframes mascotFloat {
+  0%, 100% { transform: translateY(0) rotate(-1deg); }
+  50% { transform: translateY(-13px) rotate(.7deg); }
+}
+
+/* Hero card with gradient border */
+.hero-card {
+  position: relative; z-index: 3;
+  width: min(700px, 94vw);
+  padding: 26px 26px 20px; text-align: center;
+  border-radius: 28px;
+  background: linear-gradient(170deg, rgba(13,20,42,.92), rgba(8,13,28,.84));
+  box-shadow:
+    0 32px 80px rgba(0,0,0,.55),
+    inset 0 1px 0 rgba(255,255,255,.08),
+    0 0 0 1px rgba(255,255,255,.03);
+  backdrop-filter: blur(22px) saturate(170%);
+  -webkit-backdrop-filter: blur(22px) saturate(170%);
+  overflow: hidden;
+}
+
+/* Gradient border overlay */
+.hero-card::before {
+  content: "";
+  position: absolute; inset: 0; border-radius: inherit; padding: 1px;
+  background: linear-gradient(135deg,
+    rgba(246,198,74,.65) 0%,
+    rgba(246,198,74,.18) 28%,
+    rgba(53,92,255,.22) 62%,
+    rgba(246,198,74,.40) 100%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Shimmer sweep animation */
+.hero-card::after {
+  content: "";
+  position: absolute; inset: 0;
+  background: linear-gradient(108deg,
+    transparent 34%, rgba(255,255,255,.04) 46%,
+    rgba(246,198,74,.06) 52%, transparent 64%
+  );
+  background-size: 260% 100%; background-position: -260% 0;
+  animation: heroShimmer 4.5s ease-in-out 1.5s infinite;
+  pointer-events: none;
+}
+@keyframes heroShimmer {
+  0% { background-position: -260% 0; }
+  55%, 100% { background-position: 260% 0; }
+}
+
+.hero-card h2 {
+  color: var(--gold);
+  font-size: clamp(1.6rem, 4vw, 2.2rem);
+  font-weight: 900; letter-spacing: -.042em; margin-bottom: 9px;
+  text-shadow: 0 0 28px rgba(246,198,74,.20);
+}
+.hero-card p {
+  color: rgba(237,244,255,.80);
+  font-size: clamp(.93rem, 2vw, 1.07rem);
+  font-weight: 400; line-height: 1.58;
+  max-width: 480px; margin: 0 auto;
+}
+
+.hero-perks {
+  margin-top: 18px; padding-top: 16px;
+  border-top: 1px solid rgba(255,255,255,.07);
+  display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;
+}
+.hero-perks span {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 14px; border-radius: 999px;
+  color: rgba(237,244,255,.78); font-size: .75rem; font-weight: 600;
+  background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08);
+  letter-spacing: .01em;
+  transition: background .22s, border-color .22s, color .22s;
+}
+.hero-perks span:hover {
+  background: rgba(246,198,74,.09);
+  border-color: rgba(246,198,74,.22); color: var(--gold3);
+}
+
+/* ══════════════════════════════════════════
+   CHAT LAYOUT
+══════════════════════════════════════════ */
+.chat-wrap {
+  position: relative; z-index: 2;
+  width: min(900px, 100%); margin: 0 auto;
+  display: flex; flex-direction: column; gap: 16px;
+}
+
+/* ══════════════════════════════════════════
+   MESSAGE BUBBLES
+══════════════════════════════════════════ */
+.msg {
+  display: flex; align-items: flex-end; gap: 12px;
+  animation: popIn .38s var(--ease-spring) both;
+}
+@keyframes popIn {
+  from { opacity: 0; transform: translateY(16px) scale(.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.msg.user { flex-direction: row-reverse; }
+
+.av {
+  width: 48px; height: 48px; flex-shrink: 0;
+  border-radius: 50%; display: grid; place-items: center;
+  overflow: hidden; position: relative;
+  background: rgba(10,16,34,.76);
+  border: 1.5px solid rgba(246,198,74,.30);
+  box-shadow: 0 8px 22px rgba(0,0,0,.44), 0 0 16px rgba(246,198,74,.09);
+}
+.msg.bot .av img {
+  position: absolute;
+  width: 160%; height: auto;
+  top: -4px; left: 50%;
+  transform: translateX(-50%);
+  display: block;
+}
+.msg.user .av {
+  background: linear-gradient(135deg, #2b48ff, #6b35e8);
+  border-color: rgba(130,148,255,.28);
+  box-shadow: 0 8px 22px rgba(43,72,255,.24);
+  font-size: 20px;
+}
+
+.bubble {
+  max-width: min(600px, 76%);
+  padding: 16px 20px; border-radius: 22px;
+  font-size: .97rem; line-height: 1.62; letter-spacing: -.008em;
+  backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+}
+.msg.bot .bubble {
+  background: linear-gradient(160deg, rgba(22,33,65,.82), rgba(13,20,44,.74));
+  border: 1px solid rgba(255,255,255,.09);
+  border-left: 2px solid rgba(246,198,74,.38);
+  border-bottom-left-radius: 6px;
+  box-shadow: 0 12px 38px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.05);
+}
+.msg.user .bubble {
+  background: linear-gradient(135deg, rgba(55,79,255,.95), rgba(27,44,200,.90));
+  border: 1px solid rgba(140,158,255,.26);
+  border-bottom-right-radius: 6px;
+  box-shadow: 0 12px 38px rgba(43,72,255,.20), inset 0 1px 0 rgba(255,255,255,.11);
+}
+
+.bubble strong { color: var(--gold3); font-weight: 700; }
+.bubble em { color: #b4c4ff; font-style: italic; }
+.bubble ul { padding-left: 16px; margin: 8px 0; }
+.bubble li { margin-bottom: 5px; }
+
+/* ══════════════════════════════════════════
+   TYPING
+══════════════════════════════════════════ */
+.typing-bubble { padding: 16px 22px !important; min-width: 78px; }
+.dots { display: flex; gap: 7px; align-items: center; height: 20px; }
+.dots span {
+  width: 9px; height: 9px; border-radius: 999px;
+  background: var(--gold); box-shadow: 0 0 9px rgba(246,198,74,.55);
+  animation: jump 1.2s ease-in-out infinite;
+}
+.dots span:nth-child(2) { animation-delay: .18s; background: var(--gold2); box-shadow: 0 0 9px rgba(212,160,23,.55); }
+.dots span:nth-child(3) { animation-delay: .36s; background: var(--gold3); box-shadow: 0 0 9px rgba(255,224,138,.55); }
+@keyframes jump {
+  0%, 55%, 100% { transform: translateY(0); opacity: .62; }
+  27% { transform: translateY(-8px); opacity: 1; }
+}
+
+/* ══════════════════════════════════════════
+   QUICK REPLY CHIPS
+══════════════════════════════════════════ */
+.chips {
+  display: flex; flex-wrap: wrap; gap: 10px;
+  padding: 4px 0 6px 60px;
+  animation: popIn .38s var(--ease-spring) .14s both;
+}
+.chip {
+  background: rgba(9,15,32,.74);
+  border: 1px solid rgba(246,198,74,.30);
+  color: rgba(237,244,255,.88);
+  padding: 12px 20px; border-radius: 999px;
+  font-size: .89rem; font-weight: 600;
+  cursor: pointer; font-family: inherit;
+  box-shadow: 0 7px 22px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.05);
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  transition: all .24s var(--ease-spring);
+}
+.chip:hover {
+  transform: translateY(-3px) scale(1.02);
+  color: var(--gold3);
+  border-color: rgba(246,198,74,.62);
+  background: rgba(246,198,74,.09);
+  box-shadow: 0 14px 30px rgba(0,0,0,.30), 0 0 18px rgba(246,198,74,.11);
+}
+.chip:active { transform: scale(.96); transition-duration: .1s; }
+
+/* ══════════════════════════════════════════
+   CAR RESULT CARDS
+══════════════════════════════════════════ */
+.cards-grid {
+  display: grid; gap: 12px;
+  padding-left: 60px;
+  animation: popIn .42s cubic-bezier(.34,1.2,.64,1) .08s both;
+}
+
+.car-card {
+  display: block; position: relative; overflow: hidden;
+  text-decoration: none; color: var(--text);
+  background: linear-gradient(155deg, rgba(18,28,56,.86), rgba(10,16,34,.84));
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 20px;
+  box-shadow: 0 14px 44px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.05);
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  transition: transform .28s var(--ease-out), box-shadow .28s, border-color .28s;
+}
+.car-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(246,198,74,.36);
+  box-shadow: 0 22px 56px rgba(0,0,0,.44), 0 0 22px rgba(246,198,74,.09);
+}
+.car-card:first-child {
+  border-color: rgba(246,198,74,.20);
+}
+.car-card:first-child:hover {
+  border-color: rgba(246,198,74,.48);
+  box-shadow: 0 26px 62px rgba(0,0,0,.46), 0 0 30px rgba(246,198,74,.13);
+}
+
+.cc-inner { display: flex; min-height: 134px; }
+
+.cc-img {
+  width: 168px; flex-shrink: 0;
+  position: relative; overflow: hidden;
+  background: rgba(255,255,255,.03);
+}
+/* Image right fade for seamless blend */
+.cc-img::after {
+  content: "";
+  position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent 52%, rgba(10,16,34,.48));
+  pointer-events: none;
+}
+.cc-img img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+  transition: transform .5s var(--ease-out);
+}
+.car-card:hover .cc-img img { transform: scale(1.08); }
+.cc-img-ph {
+  width: 100%; height: 100%;
+  display: grid; place-items: center; font-size: 34px;
+}
+
+.badge {
+  position: absolute; top: 9px; left: 9px; z-index: 2;
+  font-size: .60rem; font-weight: 700;
+  padding: 4px 9px; border-radius: 7px;
+  text-transform: uppercase; letter-spacing: .55px;
+  box-shadow: 0 4px 12px rgba(0,0,0,.38);
+}
+.badge-new     { background: rgba(34,197,94,.92);  color: #fff; }
+.badge-used    { background: rgba(59,130,246,.92);  color: #fff; }
+.badge-classic { background: rgba(139,92,246,.92); color: #fff; }
+
+.cc-info {
+  flex: 1; padding: 15px 46px 15px 15px;
+  display: flex; flex-direction: column; justify-content: space-between;
+}
+.cc-name {
+  font-size: .93rem; font-weight: 700; line-height: 1.32; margin-bottom: 6px;
+}
+.cc-name .brand { color: var(--gold); }
+
+.cc-price {
+  font-size: 1.36rem; font-weight: 900;
+  color: var(--gold); letter-spacing: -.042em;
+  line-height: 1; font-variant-numeric: tabular-nums;
+}
+.cc-price .cur { font-size: .82rem; font-weight: 700; margin-right: 1px; opacity: .82; }
+
+.cc-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.tag {
+  font-size: .68rem; font-weight: 600;
+  padding: 4px 9px; border-radius: 999px;
+  border: 1px solid transparent; letter-spacing: .01em;
+}
+.tf-petrol  { background: rgba(239,68,68,.11);   color: #fca5a5; border-color: rgba(239,68,68,.20); }
+.tf-lpg     { background: rgba(234,179,8,.11);   color: #fde68a; border-color: rgba(234,179,8,.22); }
+.tf-hybrid  { background: rgba(34,197,94,.10);   color: #86efac; border-color: rgba(34,197,94,.20); }
+.tf-elec    { background: rgba(59,130,246,.11);  color: #93c5fd; border-color: rgba(59,130,246,.22); }
+.tf-diesel  { background: rgba(100,116,139,.15); color: #cbd5e1; border-color: rgba(100,116,139,.22); }
+.tt { background: rgba(139,92,246,.11); color: #c4b5fd; border-color: rgba(139,92,246,.20); }
+.tk { background: var(--gold-faint); color: #fde68a; border-color: rgba(246,198,74,.22); }
+.ty { background: rgba(255,255,255,.05); color: #94a3b8; border-color: rgba(255,255,255,.08); }
+
+.cc-arrow {
+  position: absolute; right: 13px; top: 50%;
+  transform: translateY(-50%);
+  width: 30px; height: 30px; border-radius: 999px;
+  display: grid; place-items: center;
+  color: var(--gold); font-size: 13px;
+  background: rgba(246,198,74,.09);
+  border: 1px solid rgba(246,198,74,.22);
+  transition: all .22s var(--ease-out);
+}
+.car-card:hover .cc-arrow {
+  background: var(--gold); color: #071024;
+  transform: translateY(-50%) scale(1.10);
+  box-shadow: 0 0 14px rgba(246,198,74,.42);
+}
+
+.cc-rank {
+  position: absolute; bottom: 10px; right: 50px;
+  font-size: .60rem; font-weight: 700;
+  padding: 3px 9px; border-radius: 999px;
+  background: var(--gold-faint); border: 1px solid rgba(246,198,74,.22);
+  color: var(--gold3); letter-spacing: .03em;
+}
+
+.restart-btn {
+  justify-self: center;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  background: rgba(9,15,32,.72);
+  border: 1px solid rgba(255,255,255,.09);
+  color: rgba(237,244,255,.62);
+  padding: 11px 22px; border-radius: 999px;
+  font-size: .87rem; font-weight: 600; cursor: pointer;
+  font-family: inherit;
+  transition: all .24s var(--ease-out);
+}
+.restart-btn:hover {
+  border-color: rgba(246,198,74,.45); color: var(--gold3);
+  transform: translateY(-2px); background: rgba(246,198,74,.06);
+}
+
+/* ══════════════════════════════════════════
+   INPUT BAR
+══════════════════════════════════════════ */
+.input-bar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 300;
+  padding: 14px 18px 20px;
+  background: linear-gradient(180deg, transparent, rgba(5,9,22,.76) 24%, rgba(5,9,22,.97));
+}
+.input-inner {
+  width: min(960px, 100%); margin: 0 auto;
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 9px 9px 18px;
+  border-radius: 999px;
+  background: rgba(10,16,34,.84);
+  border: 1px solid rgba(255,255,255,.09);
+  box-shadow: 0 18px 55px rgba(0,0,0,.50), inset 0 1px 0 rgba(255,255,255,.06);
+  backdrop-filter: blur(26px) saturate(170%);
+  -webkit-backdrop-filter: blur(26px) saturate(170%);
+  transition: border-color .25s, box-shadow .25s;
+}
+.input-inner:focus-within {
+  border-color: rgba(246,198,74,.36);
+  box-shadow:
+    0 18px 55px rgba(0,0,0,.50),
+    inset 0 1px 0 rgba(255,255,255,.06),
+    0 0 0 3px rgba(246,198,74,.07);
+}
+
+.input-search-icon {
+  color: rgba(237,244,255,.34); font-size: 22px; flex-shrink: 0; line-height: 1;
+}
+
+#inp {
+  flex: 1; min-width: 0; height: 44px;
+  border: 0; outline: 0; background: transparent;
+  color: var(--text); font-size: .97rem; font-family: inherit; padding: 0 6px;
+}
+#inp::placeholder { color: rgba(237,244,255,.35); }
+#inp:disabled { opacity: .48; cursor: not-allowed; }
+
+#sendBtn {
+  width: 50px; height: 50px; flex-shrink: 0;
+  border-radius: 999px; border: 0;
+  display: grid; place-items: center; cursor: pointer;
+  background: linear-gradient(135deg, var(--gold3), var(--gold), var(--gold2));
+  color: #071024;
+  box-shadow: 0 8px 22px rgba(246,198,74,.30), 0 0 0 1px rgba(246,198,74,.14);
+  transition: transform .20s var(--ease-spring), box-shadow .20s, opacity .20s;
+}
+#sendBtn:hover:not(:disabled) {
+  transform: scale(1.08) rotate(-8deg);
+  box-shadow: 0 12px 34px rgba(246,198,74,.44), 0 0 0 1px rgba(246,198,74,.24);
+}
+#sendBtn:active:not(:disabled) { transform: scale(.93); transition-duration: .1s; }
+#sendBtn:disabled { opacity: .40; cursor: not-allowed; }
+
+/* ══════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════ */
+@media (max-width: 720px) {
+  header { height: 62px; padding: 0 14px; }
+  .h-logo { width: 40px; height: 40px; border-radius: 11px; }
+  .h-titles p { display: none; }
+  .h-online { padding: 7px 11px; font-size: .64rem; }
+
+  .app-shell { padding: 12px 12px 122px; }
+  .hero { min-height: 330px; padding-top: 8px; margin-bottom: 14px; }
+  .hero-mascot { width: min(250px, 68vw); margin-bottom: -22px; }
+  .hero-card { padding: 20px 16px 16px; border-radius: 22px; }
+  .hero-card h2 { font-size: 1.50rem; }
+  .hero-perks span { font-size: .69rem; padding: 6px 10px; }
+
+  .av { width: 40px; height: 40px; }
+  .bubble { max-width: 87%; font-size: .89rem; padding: 13px 15px; }
+  .chips, .cards-grid { padding-left: 0; }
+  .chip { font-size: .82rem; padding: 10px 14px; }
+
+  .cc-inner { min-height: 118px; }
+  .cc-img { width: 108px; }
+  .cc-info { padding: 12px 36px 12px 12px; }
+  .cc-name { font-size: .82rem; }
+  .cc-price { font-size: 1.10rem; }
+  .tag { font-size: .61rem; padding: 3px 7px; }
+  .cc-rank { display: none; }
+
+  .input-bar { padding: 10px 10px 13px; }
+  .input-inner { padding: 8px 8px 8px 14px; gap: 8px; }
+  .input-search-icon { display: none; }
+  #sendBtn { width: 44px; height: 44px; }
+}
+
+</style>
+</head>
+<body>
+
+<header>
+  <div class="h-logo" aria-label="AI Poulakis"><img src="poulakisMascot.png" alt="AI Poulakis mascot"></div>
+  <div class="h-titles">
+    <h1>AI Poulakis – Find your Car</h1>
+    <p>Εξουσιοδοτημένος Αντιπρόσωπος Renault &amp; Dacia · Χαϊδάρι Αθήνα</p>
+  </div>
+  <div class="h-online"><div class="h-dot"></div>Online</div>
+</header>
+
+
+<main class="app-shell">
+  <section class="hero">
+    <img src="poulakisMascot.png" alt="AI Poulakis mascot" class="hero-mascot">
+    <div class="hero-card">
+      <h2>Γεια σου! 👋</h2>
+      <p>Είμαι ο AI Poulakis και είμαι εδώ για να σε βοηθήσω να βρεις το ιδανικό αυτοκίνητο για εσένα.</p>
+      <div class="hero-perks">
+        <span>🔍 Προσωποποιημένες προτάσεις</span>
+        <span>💸 Καλύτερες τιμές</span>
+        <span>✅ Άμεση εξυπηρέτηση</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="chat-wrap" id="chat"></div>
+</main>
+
+
+<div class="input-bar">
+  <div class="input-inner">
+    <span class="input-search-icon" aria-hidden="true">⌕</span>
+    <input id="inp" type="text" placeholder="Γράψτε το μήνυμά σας…" autocomplete="off">
+    <button id="sendBtn" onclick="send()" aria-label="Αποστολή">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+      </svg>
+    </button>
+  </div>
+</div>
+
+<script>
+// ── Inventory (για rendering καρτών) ──────────────────────
+const CARS = [
+  { id:1,  brand:"Dacia",         model:"Sandero Expression ECO-G 100",          year:2025, km:0,      price:16590, fuel:"lpg",    trans:"manual", body:"hatchback", seats:5, url:"https://npoulakis.gr/used/car/dacia-sandero-2025-999cc-49518",      img:"https://s3-eu-west-1.amazonaws.com/i1.icdn24.gr/thumbnail_portrait/49518/478866.JPG" },
+  { id:2,  brand:"Dacia",         model:"Sandero Stepway Essential ECO-G 100",   year:2025, km:0,      price:16890, fuel:"lpg",    trans:"manual", body:"hatchback", seats:5, url:"https://npoulakis.gr/used/car/dacia-sandero-2025-999cc-51741",      img:"https://s3-eu-west-1.amazonaws.com/i1.icdn24.gr/thumbnail_portrait/51741/453756.JPG" },
+  { id:3,  brand:"Dacia",         model:"Sandero Stepway Expression TCe 90",     year:2025, km:0,      price:17390, fuel:"petrol", trans:"manual", body:"hatchback", seats:5, url:"https://npoulakis.gr/used/car/dacia-sandero-2025-999cc-49515",      img:"https://s3-eu-west-1.amazonaws.com/i1.icdn24.gr/thumbnail_portrait/49515/477494.JPG" },
+  { id:4,  brand:"Dacia",         model:"Sandero Stepway Expression ECO-G 100",  year:2025, km:0,      price:17890, fuel:"lpg",    trans:"manual", body:"hatchback", seats:5, url:"https://npoulakis.gr/used/car/dacia-sandero-2025-999cc-49516",      img:"https://s3-eu-west-1.amazonaws.com/i1.icdn24.gr/thumbnail_portrait/49516/517096.JPG" },
+  { id:5,  brand:"Dacia",         model:"Sandero Expression TCe 90 CVT",         year:2025, km:0,      price:17990, fuel:"petrol", trans:"auto",   body:"hatchback", seats:5, url:"https://npoulakis.gr/used/car/dacia-sandero-2025-999cc-50445",      img:"https://s3-eu-west-1.amazonaws.com/i1.icdn24.gr/thumbnail_portrait/50445/500316.JPG" },
+  { id:6,  brand:"Dacia",         model:"Sandero Stepway Extreme ECO-G 100",     year:2025, km:0,      price:19090, fuel:"lpg",    trans:"manual", body:"hatchback", seats:5, url:"https://npoulakis.gr/used/car/dacia-sandero-2025-999cc-54404",      img:"https://s3-eu-west-1.amazonaws.com/i1.icdn24.gr/thumbnail_portrait/54404/521758.JPG" },
+  { id:7,  brand:"Dacia",         model:"Sandero Stepway Expression TCe 90 CVT", year:2025, km:0,      price:19890, fuel:"petrol", trans:"auto",   body:"hatchback", seats:5, url:"https://npoulakis.gr/used/car/dacia-sandero-2025-999cc-55956",      img:"https://s3-eu-west-1.amazonaws.com/i1.icdn24.gr/thumbnail_portrait/55956/514962.JPG" },
+  { id:8,  brand:"Renault",       model:"Clio Evolution TCe 90",                 year:2025, km:0,      price:19400, fuel:"petrol", trans:"manual", body:"hatchback", seats:5, url:"https://npoulakis.gr/used/car/renault-clio-2025-999cc-54635",       img:"https://s3-eu-west-1.amazonaws.com/i1.icdn24.gr/thumbnail_portrait/54635/511991.JPG" },
+  { id:9,  brand:"Renault",       model:"Clio Techno TCe 100 LPG",               year:2025, km:0,      price:21400, fuel:"lpg",    trans:"manual", body:"hatchback", seats:5, url:"https://npoulakis.gr/used/car/renault-clio-2025-999cc-54584",       img:"https://s3-eu-west-1.amazonaws.com/i1.icdn24.gr/thumbnail_portrait/54584/521741.JPG" },
+  { id:10, brand:"Dacia",         model:"Jogger Expression ECO-G 100 (7θ)",      year:2025, km:0,      price:21900, fuel:"lpg",    trans:"manual", body:"mpv",       seats:7, url:"https://npoulakis.gr/used/car/dacia-jogger-2025-999cc-55155",       img:"https://s3-eu-west-1.amazonaws.com/i1.icdn24.gr/thumbnail_portrait/55155/502889.JPG" },
+  { id:11, brand:"Dacia",         model:"Jogger Expression TCe 110 (7θ)",        year:2025, km:0,      price:22500, fuel:"petrol", trans:"manual", body:"mpv",       seats:7, url:"https://npoulakis.gr/used/car/dacia-jogger-2025-999cc-51854",       img:"https://s3-eu-west-1.amazonaws.com/i1.icdn24.gr/thumbnail_portrait/51854/502878.JPG" },
+  { id:12, brand:"Dacia",         model:"Duster 1.0 TCe 100 LPG Extreme",        year:2025, km:3232,   price:22500, fuel:"lpg",    trans:"manual", body:"suv",       seats:5, url:"https://npoulakis.gr/used/car/dacia-duster-2025-999cc-59183",       img:"https://s3-eu-west-1.amazonaws.com/i1.icdn24.gr/thumbnail_portrait/59183/565697.JPG" },
+  { id:13, brand:"Renault",       model:"Captur Techno Eco-G 100",               year:2025, km:0,      price:24400, fuel:"lpg",    trans:"manual", body:"crossover", seats:5, url:"https://npoulakis.gr/used/car/renault-captur-2025-999cc-55904",      img:"https://s3-eu-west-1.amazonaws.com/i1.icdn24.gr/thumbnail_portrait/55904/521729.JPG" },
+  { id:14, brand:"Dacia",         model:"Jogger Extreme ECO-G 100 (7θ)",         year:2025, km:0,      price:24400, fuel:"lpg",    trans:"manual", body:"mpv",       seats:7, url:"https://npoulakis.gr/used/car/dacia-jogger-2025-999cc-51803",       img:"https://s3-eu-west-1.amazonaws.com/i1.icdn24.gr/thumbnail_portrait/51803/463829.JPG" },
+  { id:15, brand:"Renault",       model:"Captur Techno Mild Hybrid 140",         year:2025, km:0,      price:25400, fuel:"hybrid", trans:"manual", body:"crossover", seats:5, url:"https://npoulakis.gr/used/car/renault-captur-2025-1333cc-56399",     img:"https://s3-eu-west-1.amazonaws.com/i1.icdn24.gr/thumbnail_portrait/56399/521776.JPG" },
+  { id:16, brand:"Renault",       model:"Arkana Evolution Mild Hybrid 140 EDC",  year:2025, km:0,      price:26900, fuel:"hybrid", trans:"auto",   body:"suv",       seats:5, url:"https://npoulakis.gr/used/car/renault-arkana-2025-1333cc-50419",     img:"https://s3-eu-west-1.amazonaws.com/i1.icdn24.gr/thumbnail_portrait/50419/516460.JPG" },
+  { id:17, brand:"Renault",       model:"Captur Techno E-Tech Full Hybrid 145",  year:2025, km:0,      price:27900, fuel:"hybrid", trans:"auto",   body:"crossover", seats:5, url:"https://npoulakis.gr/used/car/renault-captur-2025-1598cc-56135",     img:"https://s3-eu-west-1.amazonaws.com/i1.icdn24.gr/thumbnail_portrait/56135/517472.JPG" },
+  { id:18, brand:"Renault",       model:"Arkana Techno Mild Hybrid 140 EDC",     year:2025, km:0,      price:29900, fuel:"hybrid", trans:"auto",   body:"suv",       seats:5, url:"https://npoulakis.gr/used/car/renault-arkana-2025-1333cc-51549",     img:"https://s3-eu-west-1.amazonaws.com/i1.icdn24.gr/thumbnail_portrait/51549/521692.JPG" },
+  { id:19, brand:"Renault",       model:"Arkana Techno E-TECH Full Hybrid 145",  year:2025, km:0,      price:33900, fuel:"hybrid", trans:"auto",   body:"suv",       seats:5, url:"https://npoulakis.gr/used/car/renault-arkana-2025-1600cc-51379",     img:"https://s3-eu-west-1.amazonaws.com/i1.icdn24.gr/thumbnail_portrait/51379/521753.JPG" },
+  { id:20, brand:"Nissan",        model:"Leaf SV 40kW",                          year:2022, km:33640,  price:21900, fuel:"electric",trans:"auto",  body:"hatchback", seats:5, url:"https://npoulakis.gr/used/car/nissan-leaf-2022-1cc-54394",           img:"https://s3-eu-west-1.amazonaws.com/i1.icdn24.gr/thumbnail_portrait/54394/493247.JPG" },
+  { id:21, brand:"Renault",       model:"Captur",                                year:2018, km:66556,  price:17500, fuel:"petrol", trans:"auto",   body:"crossover", seats:5, url:"https://npoulakis.gr/used/car/renault-captur-2018-1332cc-53654",     img:"https://s3-eu-west-1.amazonaws.com/i1.icdn24.gr/thumbnail_portrait/53654/483584.JPG" },
+  { id:22, brand:"Citroen",       model:"C1",                                    year:2015, km:17124,  price:9500,  fuel:"petrol", trans:"manual", body:"hatchback", seats:5, url:"https://npoulakis.gr/used/car/citroen-c1-2015-998cc-53615",         img:"https://s3-eu-west-1.amazonaws.com/i1.icdn24.gr/thumbnail_portrait/53615/482996.JPG" },
+  { id:23, brand:"Jeep",          model:"Wrangler",                              year:2020, km:48500,  price:75000, fuel:"diesel", trans:"auto",   body:"suv",       seats:5, url:"https://npoulakis.gr/used/car/jeep-wrangler-2020-2143cc-53128",      img:"https://s3-eu-west-1.amazonaws.com/i1.icdn24.gr/thumbnail_portrait/53128/527682.JPG" },
+  { id:24, brand:"DS",            model:"DS3",                                   year:2017, km:95000,  price:15800, fuel:"diesel", trans:"manual", body:"hatchback", seats:5, url:"https://npoulakis.gr/used/car/ds-ds3-2017-1598cc-52357",            img:"https://s3-eu-west-1.amazonaws.com/i1.icdn24.gr/thumbnail_portrait/52357/463894.JPG" },
+  { id:25, brand:"Citroen",       model:"XM",                                    year:1990, km:92400,  price:10000, fuel:"petrol", trans:"auto",   body:"classic",   seats:5, url:"https://npoulakis.gr/used/car/citroen-xm-1990-1998cc-54732",         img:"https://s3-eu-west-1.amazonaws.com/i1.icdn24.gr/thumbnail_portrait/54732/497443.JPG" },
+  { id:26, brand:"Citroen",       model:"CX Pallas",                             year:1976, km:1,      price:5000,  fuel:"petrol", trans:"manual", body:"classic",   seats:5, url:"https://npoulakis.gr/used/car/citroen-cx-1976-2200cc-54565",         img:"https://s3-eu-west-1.amazonaws.com/i1.icdn24.gr/thumbnail_portrait/54565/495315.JPG" },
+  { id:27, brand:"Citroen",       model:"DS 21 Special",                         year:1970, km:1,      price:27000, fuel:"petrol", trans:"manual", body:"classic",   seats:5, url:"https://npoulakis.gr/used/car/citroen-ds-1970-2175cc-54547",         img:"https://s3-eu-west-1.amazonaws.com/i1.icdn24.gr/thumbnail_portrait/54547/495137.JPG" },
+  { id:28, brand:"Mercedes-Benz", model:"220 SE",                                year:1965, km:4238,   price:32000, fuel:"petrol", trans:"manual", body:"classic",   seats:5, url:"https://npoulakis.gr/used/car/mercedes-benz-220-1965-2195cc-54543",  img:"https://s3-eu-west-1.amazonaws.com/i1.icdn24.gr/thumbnail_portrait/54543/495120.JPG" },
+];
+
+// ── State ─────────────────────────────────────────────────
+let history = [];   // [{role, content}]
+let loading  = false;
+
+// ── DOM helpers ───────────────────────────────────────────
+const chatEl = document.getElementById("chat");
+const inpEl  = document.getElementById("inp");
+const btnEl  = document.getElementById("sendBtn");
+
+function scrollEnd() {
+  setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior:"smooth" }), 80);
+}
+
+function setLoading(on) {
+  loading = on;
+  inpEl.disabled = on;
+  btnEl.disabled = on;
+}
+
+// Minimal markdown → HTML (bold, italic, ul)
+function mdToHtml(text) {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*(.+?)\*/g,     "<em>$1</em>")
+    .replace(/^- (.+)$/gm,     "<li>$1</li>")
+    .replace(/(<li>.*<\/li>)/s, "<ul>$1</ul>")
+    .replace(/\n/g, "<br>");
+}
+
+function addBubble(html, who) {
+  const avContent = who === 'bot'
+    ? '<img src="poulakisMascot.png" alt="AI Poulakis">'
+    : '👤';
+  const div = document.createElement("div");
+  div.className = `msg ${who}`;
+  div.innerHTML = `<div class="av">${avContent}</div><div class="bubble">${html}</div>`;
+  chatEl.appendChild(div);
+  scrollEnd();
+  return div;
+}
+
+function addTyping() {
+  const div = document.createElement("div");
+  div.id = "typing"; div.className = "msg bot";
+  div.innerHTML = `<div class="av"><img src="poulakisMascot.png" alt="AI Poulakis"></div><div class="bubble typing-bubble"><div class="dots"><span></span><span></span><span></span></div></div>`;
+  chatEl.appendChild(div); scrollEnd();
+}
+function removeTyping() {
+  const t = document.getElementById("typing"); if (t) t.remove();
+}
+
+function addChips(opts) {
+  const wrap = document.createElement("div");
+  wrap.className = "chips"; wrap.id = "chips";
+  opts.forEach(o => {
+    const b = document.createElement("button");
+    b.className = "chip"; b.textContent = o.label;
+    b.onclick = () => { clearChips(); userSend(o.value); };
+    wrap.appendChild(b);
+  });
+  chatEl.appendChild(wrap); scrollEnd();
+}
+function clearChips() { document.querySelectorAll("#chips").forEach(e => e.remove()); }
+
+// ── Car card renderer ─────────────────────────────────────
+function fuelClass(f) {
+  return { petrol:"tf-petrol", lpg:"tf-lpg", hybrid:"tf-hybrid", electric:"tf-elec", diesel:"tf-diesel" }[f] || "tf-petrol";
+}
+function fuelLabel(f) {
+  return { petrol:"⛽ Βενζίνη", lpg:"🔵 LPG/Αέριο", hybrid:"🌿 Υβριδικό", electric:"⚡ Ηλεκτρικό", diesel:"🛢️ Diesel" }[f] || f;
+}
+
+function renderCards(ids) {
+  if (!ids || !ids.length) return;
+  const cars = ids.map(id => CARS.find(c => c.id === id)).filter(Boolean);
+  if (!cars.length) return;
+
+  const wrap = document.createElement("div");
+  wrap.className = "cards-grid";
+
+  const ranks = ["🥇 Καλύτερη επιλογή","🥈 2η επιλογή","🥉 3η επιλογή","👍 4η επιλογή"];
+
+  cars.forEach((car, i) => {
+    const isNew     = car.km < 500 && car.year >= 2024;
+    const isClassic = car.body === "classic";
+    const badge     = isClassic ? "badge-classic" : isNew ? "badge-new" : "badge-used";
+    const badgeTxt  = isClassic ? "Κλασικό"       : isNew ? "Νέο 2025"  : "Μεταχειρισμένο";
+    const kmTxt     = car.km === 0 ? "0 χλμ" : car.km.toLocaleString("el-GR") + " χλμ";
+    const transTxt  = car.trans === "auto" ? "⚙️ Αυτόματο" : "🔧 Χειροκίνητο";
+
+    const a = document.createElement("a");
+    a.className = "car-card";
+    a.href = car.url;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    a.innerHTML = `
+      <div class="cc-inner">
+        <div class="cc-img">
+          <img src="${car.img}" alt="${car.brand} ${car.model}"
+               onerror="this.parentElement.innerHTML='<div class=\\'cc-img-ph\\'>🚗</div>'">
+          <span class="badge ${badge}">${badgeTxt}</span>
+        </div>
+        <div class="cc-info">
+          <div>
+            <div class="cc-name"><span class="brand">${car.brand}</span> ${car.model}
+              <span style="color:var(--muted);font-weight:400"> (${car.year})</span>
+            </div>
+            <div class="cc-price"><span class="cur">€</span>${car.price.toLocaleString("el-GR")}</div>
+          </div>
+          <div class="cc-tags">
+            <span class="tag ${fuelClass(car.fuel)}">${fuelLabel(car.fuel)}</span>
+            <span class="tag tt">${transTxt}</span>
+            <span class="tag tk">📍 ${kmTxt}</span>
+            <span class="tag ty">🪑 ${car.seats} θέσεις</span>
+          </div>
+        </div>
+        <div class="cc-arrow">→</div>
+      </div>
+      <div class="cc-rank">${ranks[i] || "#" + (i+1)}</div>
+    `;
+    wrap.appendChild(a);
+  });
+
+  const rb = document.createElement("button");
+  rb.className = "restart-btn"; rb.innerHTML = "🔄 Νέα αναζήτηση";
+  rb.onclick = restart;
+  wrap.appendChild(rb);
+
+  chatEl.appendChild(wrap); scrollEnd();
+}
+
+// ── API call ──────────────────────────────────────────────
+async function callAPI() {
+  const res = await fetch("/api/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ messages: history }),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.reply || "Server error " + res.status);
+  }
+
+  return res.json();
+}
+
+// ── Send flow ─────────────────────────────────────────────
+async function userSend(text) {
+  if (!text.trim() || loading) return;
+  clearChips();
+  addBubble(text, "user");
+  history.push({ role: "user", content: text });
+
+  setLoading(true);
+  addTyping();
+
+  try {
+    const data = await callAPI();
+    removeTyping();
+
+    const reply = (data.reply || "").trim();
+    if (reply) {
+      addBubble(mdToHtml(reply), "bot");
+      history.push({ role: "assistant", content: reply });
+    }
+
+    if (data.car_ids && data.car_ids.length > 0) {
+      renderCards(data.car_ids);
+    }
+  } catch (e) {
+    removeTyping();
+    addBubble("⚠️ Παρουσιάστηκε σφάλμα. Παρακαλώ δοκιμάστε ξανά.", "bot");
+    console.error(e);
+  } finally {
+    setLoading(false);
+  }
+}
+
+function send() {
+  const v = inpEl.value.trim();
+  inpEl.value = "";
+  userSend(v);
+}
+
+inpEl.addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } });
+
+// ── Restart ───────────────────────────────────────────────
+async function restart() {
+  history = [];
+  chatEl.innerHTML = "";
+  await init();
+}
+
+// ── Init ──────────────────────────────────────────────────
+async function init() {
+  setLoading(true);
+  addTyping();
+
+  try {
+    // Πρώτο μήνυμα: ζητάμε από το AI να χαιρετήσει
+    history.push({ role: "user", content: "__init__" });
+    const data = await callAPI();
+    removeTyping();
+    history.push({ role: "assistant", content: data.reply || "" });
+    if (data.reply) addBubble(mdToHtml(data.reply), "bot");
+  } catch {
+    removeTyping();
+    addBubble("Γεια σας! 👋 Είμαι ο <strong>AI Poulakis</strong>. Πώς μπορώ να σας βοηθήσω να βρείτε το αυτοκίνητό σας;", "bot");
+  } finally {
+    setLoading(false);
+  }
+
+  // Αρχικά chips για γρήγορη εκκίνηση
+  addChips([
+    { label:"🆕 Θέλω καινούργιο",      value:"Ψάχνω καινούργιο αυτοκίνητο" },
+    { label:"🔄 Θέλω μεταχειρισμένο",  value:"Ψάχνω μεταχειρισμένο αυτοκίνητο" },
+    { label:"🏛️ Κλασικό / Συλλεκτικό", value:"Με ενδιαφέρουν κλασικά συλλεκτικά αυτοκίνητα" },
+    { label:"💡 Τι έχετε διαθέσιμο;",  value:"Τι αυτοκίνητα έχετε διαθέσιμα αυτή τη στιγμή;" },
+  ]);
+}
+
+init();
+</script>
+</body>
+</html>
