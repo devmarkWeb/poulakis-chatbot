@@ -29,6 +29,24 @@ const CARS = [
   { id:26, brand:"Citroen",      model:"CX Pallas",                             year:1976, km:1,      price:5000,  fuel:"Βενζίνη",       trans:"Χειροκίνητο", body:"Κλασικό",   seats:5, url:"https://npoulakis.gr/used/car/citroen-cx-1976-2200cc-54565",         img:"https://s3-eu-west-1.amazonaws.com/i1.icdn24.gr/thumbnail_portrait/54565/495315.JPG" },
   { id:27, brand:"Citroen",      model:"DS 21 Special",                         year:1970, km:1,      price:27000, fuel:"Βενζίνη",       trans:"Χειροκίνητο", body:"Κλασικό",   seats:5, url:"https://npoulakis.gr/used/car/citroen-ds-1970-2175cc-54547",         img:"https://s3-eu-west-1.amazonaws.com/i1.icdn24.gr/thumbnail_portrait/54547/495137.JPG" },
   { id:28, brand:"Mercedes-Benz",model:"220 SE",                                year:1965, km:4238,   price:32000, fuel:"Βενζίνη",       trans:"Χειροκίνητο", body:"Κλασικό",   seats:5, url:"https://npoulakis.gr/used/car/mercedes-benz-220-1965-2195cc-54543",  img:"https://s3-eu-west-1.amazonaws.com/i1.icdn24.gr/thumbnail_portrait/54543/495120.JPG" },
+  { id:29, brand:"Renault",       model:"Clio DCI 90 Expression",               year:2015, km:115000, price:7990,  fuel:"Diesel",        trans:"Χειροκίνητο", body:"Hatchback",  seats:5, url:"https://npoulakis.gr/used/car/renault-clio-2015-1500cc-59448",       img:"" },
+  { id:30, brand:"Dacia",         model:"Sandero 1.0 TCe 100 LPG",             year:2023, km:84000,  price:14500, fuel:"LPG/Αέριο",     trans:"Χειροκίνητο", body:"Hatchback",  seats:5, url:"https://npoulakis.gr/used/car/dacia-sandero-2023-1000cc-59416",       img:"" },
+  { id:31, brand:"Nissan",        model:"Juke Hybrid Full Extra",               year:2023, km:23000,  price:23990, fuel:"Full Hybrid",   trans:"Αυτόματο",    body:"Crossover",  seats:5, url:"https://npoulakis.gr/used/car/nissan-juke-2023-1600cc-59417",         img:"" },
+  { id:32, brand:"Peugeot",       model:"3008 GT Line",                         year:2018, km:43000,  price:22990, fuel:"Diesel",        trans:"Χειροκίνητο", body:"SUV",        seats:5, url:"https://npoulakis.gr/used/car/peugeot-3008-2018-1500cc-59418",        img:"" },
+  { id:33, brand:"Ford",          model:"Puma EcoBoost Hybrid Titanium",        year:2020, km:45000,  price:16790, fuel:"Mild Hybrid",   trans:"Χειροκίνητο", body:"Crossover",  seats:5, url:"https://npoulakis.gr/used/car/ford-puma-2020-1000cc-59420",           img:"" },
+  { id:34, brand:"Nissan",        model:"Juke N-Connecta",                      year:2020, km:90000,  price:16890, fuel:"Βενζίνη",       trans:"Αυτόματο",    body:"Crossover",  seats:5, url:"https://npoulakis.gr/used/car/nissan-juke-2020-1000cc-59421",         img:"" },
+  { id:35, brand:"Dacia",         model:"Duster Prestige LPG",                  year:2021, km:83000,  price:16790, fuel:"LPG/Αέριο",     trans:"Χειροκίνητο", body:"SUV",        seats:5, url:"https://npoulakis.gr/used/car/dacia-duster-2021-1000cc-59422",        img:"" },
+  { id:36, brand:"Seat",          model:"Ibiza FR 1.4 TSI",                     year:2018, km:100000, price:15000, fuel:"Βενζίνη",       trans:"Χειροκίνητο", body:"Hatchback",  seats:5, url:"https://npoulakis.gr/used/car/seat-ibiza-2018-1500cc-59423",          img:"" },
+  { id:37, brand:"Skoda",         model:"Scala 1.0 CNG",                        year:2020, km:105000, price:13790, fuel:"CNG/Αέριο",     trans:"Χειροκίνητο", body:"Hatchback",  seats:5, url:"https://npoulakis.gr/used/car/skoda-scala-2020-1000cc-59424",         img:"" },
+  { id:38, brand:"Ford",          model:"EcoSport 1.5 TDCi",                    year:2018, km:92000,  price:13490, fuel:"Diesel",        trans:"Χειροκίνητο", body:"SUV",        seats:5, url:"https://npoulakis.gr/used/car/ford-ecosport-2018-1500cc-59425",       img:"" },
+  { id:39, brand:"BMW",           model:"116d EfficientDynamic",                year:2015, km:160000, price:12500, fuel:"Diesel",        trans:"Χειροκίνητο", body:"Hatchback",  seats:5, url:"https://npoulakis.gr/used/car/bmw-116-2015-1600cc-59428",             img:"" },
+  { id:40, brand:"Mini",          model:"Cooper D",                             year:2016, km:120000, price:12890, fuel:"Diesel",        trans:"Χειροκίνητο", body:"Hatchback",  seats:5, url:"https://npoulakis.gr/used/car/mini-cooper-d-2016-1500cc-59429",       img:"" },
+  { id:41, brand:"Renault",       model:"Clio TCe 120 Dynamic",                 year:2017, km:64500,  price:11800, fuel:"Βενζίνη",       trans:"Χειροκίνητο", body:"Hatchback",  seats:5, url:"https://npoulakis.gr/used/car/renault-clio-2017-1200cc-59431",        img:"" },
+  { id:42, brand:"Opel",          model:"Astra 1.6 CDTi Special Edition",       year:2019, km:160000, price:11500, fuel:"Diesel",        trans:"Χειροκίνητο", body:"Hatchback",  seats:5, url:"https://npoulakis.gr/used/car/opel-astra-2019-1600cc-59432",          img:"" },
+  { id:43, brand:"Mercedes-Benz", model:"E 200 Avantgarde",                     year:2005, km:195000, price:9500,  fuel:"Βενζίνη",       trans:"Αυτόματο",    body:"Sedan",      seats:5, url:"https://npoulakis.gr/used/car/mercedes-benz-e-200-2005-1800cc-59434",  img:"" },
+  { id:44, brand:"Citroen",       model:"C3 1.2 PureTech 82",                   year:2019, km:110000, price:10490, fuel:"Βενζίνη",       trans:"Χειροκίνητο", body:"Hatchback",  seats:5, url:"https://npoulakis.gr/used/car/citroen-c3-2019-1200cc-59435",          img:"" },
+  { id:45, brand:"Opel",          model:"Corsa 1.3 CDTi EcoFlex",               year:2016, km:158000, price:8800,  fuel:"Diesel",        trans:"Χειροκίνητο", body:"Hatchback",  seats:5, url:"https://npoulakis.gr/used/car/opel-corsa-2016-1300cc-59437",          img:"" },
+  { id:46, brand:"Renault",       model:"Twingo 1.0 SCe 68",                    year:2016, km:143000, price:8500,  fuel:"Βενζίνη",       trans:"Χειροκίνητο", body:"Hatchback",  seats:5, url:"https://npoulakis.gr/used/car/renault-twingo-2016-1000cc-59439",       img:"" },
 ];
 
 const INVENTORY_TEXT = CARS.map(c =>
@@ -41,15 +59,17 @@ const SYSTEM_PROMPT = `Είσαι ο "AI Poulakis", ο έξυπνος βοηθό
 Βοηθάς τον χρήστη να βρει το ιδανικό αυτοκίνητο από το τρέχον απόθεμα μέσω φυσικής συνομιλίας. Μιλάς ΠΑΝΤΑ Ελληνικά, φιλικά και επαγγελματικά.
 
 ## Οδηγίες συνομιλίας
-- Κάνε 1-2 ερωτήσεις τη φορά — μην κατακλύζεις τον χρήστη
-- Μάζεψε σταδιακά: budget, τύπο αμαξιού, καύσιμο, κιβώτιο, αριθμό θέσεων, καινούργιο/μεταχειρισμένο
-- Όταν έχεις αρκετές πληροφορίες (τουλάχιστον budget + 1-2 προτιμήσεις), πρότεινε αμάξια
-- Εξήγησε σύντομα ΓΙΑΤΙ προτείνεις κάθε αμάξι (τιμή, καύσιμο, τύπος κλπ)
-- Αν ρωτηθείς για διαφορές τεχνολογιών (LPG vs βενζίνη, mild hybrid vs full hybrid κλπ), εξήγησε απλά
-- Αν κανένα αμάξι δεν ταιριάζει, πες το ειλικρινά και προτεινε να καλέσουν στο 210-5820821
+- Μόλις ξέρεις το budget, πρότεινε **ΑΜΕΣΑ** αμάξια — μην συνεχίζεις να ρωτάς πολλά
+- Κάνε το πολύ **1 επιπλέον** ερώτηση αν υπάρχουν πολλές επιλογές (π.χ. καινούργιο ή μεταχειρισμένο)
+- Αν ο χρήστης πει τι ψάχνει, δείξε αμέσως επιλογές χωρίς εισαγωγικές ερωτήσεις
+- Εξήγησε σύντομα ΓΙΑΤΙ προτείνεις κάθε αμάξι (τιμή, καύσιμο, τύπος)
+- Αν ρωτηθείς για διαφορές τεχνολογιών (LPG vs βενζίνη, hybrid κλπ), εξήγησε απλά
 
-## ΚΡΙΤΙΚΟΣ ΚΑΝΟΝΑΣ — Budget
-ΠΟΤΕ μην προτείνεις αμάξι με τιμή ΠΑΝΩ από το budget του χρήστη. Αυτό είναι αδιαπραγμάτευτο.
+## Κανόνες Budget & Κατηγορία
+1. **Εντός budget**: Πρότεινε τα καλύτερα αμάξια εντός budget πρώτα.
+2. **Δεν υπάρχει τίποτα εντός budget**: Πρότεινε το **φθηνότερο** που ξεπερνά λίγο το budget (max +20%) — πες ευθέως π.χ. "Δεν έχω κάτι στα €8.000, αλλά αυτό είναι μόνο €500 παραπάνω και αξίζει."
+3. **Κατηγορία δεν υπάρχει**: Αν δεν υπάρχει η ακριβής κατηγορία (π.χ. diesel SUV), πρότεινε την πιο κοντινή εναλλακτική (π.χ. hybrid crossover) και εξήγησε γιατί είναι καλή επιλογή.
+4. Μην προτείνεις ποτέ αμάξια >30% πάνω από το budget χωρίς να ρωτήσεις τον χρήστη.
 
 ## Μορφή απάντησης — ΠΑΝΤΑ έγκυρο JSON
 Απάντα ΠΑΝΤΑ με αυτή ακριβώς τη δομή JSON:
