@@ -45,7 +45,7 @@ const CARS = [
   { id:25, brand:"Citroen",      model:"XM",                                    year:1990, km:92400,  price:10000, fuel:"Βενζίνη",       trans:"Αυτόματο",    body:"Κλασικό",   seats:5, url:"https://npoulakis.gr/used/car/citroen-xm-1990-1998cc-54732",         img:"https://s3-eu-west-1.amazonaws.com/i1.icdn24.gr/thumbnail_portrait/54732/497443.JPG" },
   { id:26, brand:"Citroen",      model:"CX Pallas",                             year:1976, km:1,      price:5000,  fuel:"Βενζίνη",       trans:"Χειροκίνητο", body:"Κλασικό",   seats:5, url:"https://npoulakis.gr/used/car/citroen-cx-1976-2200cc-54565",         img:"https://s3-eu-west-1.amazonaws.com/i1.icdn24.gr/thumbnail_portrait/54565/495315.JPG" },
   { id:27, brand:"Citroen",      model:"DS 21 Special",                         year:1970, km:1,      price:27000, fuel:"Βενζίνη",       trans:"Χειροκίνητο", body:"Κλασικό",   seats:5, url:"https://npoulakis.gr/used/car/citroen-ds-1970-2175cc-54547",         img:"https://s3-eu-west-1.amazonaws.com/i1.icdn24.gr/thumbnail_portrait/54547/495137.JPG" },
-  { id:28, brand:"Mercedes-Benz",model:"220 SE",                                year:1965, km:4238,   price:32000, fuel:"Βενζίνη",       trans:"Χειροκίνητο", body:"Κλασικό",   seats:5, url:"https://npoulakis.gr/used/car/mercedes-benz-220-1965-2195cc-54543",  img:"https://s3-eu-west-1.amazonaws.com/i1.icdn24.gr/thumbnail_portrait/54543/495120.JPG" },
+  { id:28, brand:"Mercedes-Benz",model:"220 SE",                                year:1965, km:4238,   price:32000, fuel:"Βενζίνη",       trans:"Χειροκίνητο", body:"Κλασικό",   seats:5, url:"https://npoulakis.gr/used/car/mercedes-benz-220-1965-2195cc-59183",  img:"https://s3-eu-west-1.amazonaws.com/i1.icdn24.gr/thumbnail_portrait/54543/495120.JPG" },
   { id:29, brand:"Renault",       model:"Clio DCI 90 Expression",               year:2015, km:115000, price:7990,  fuel:"Diesel",        trans:"Χειροκίνητο", body:"Hatchback",  seats:5, url:"https://npoulakis.gr/used/car/renault-clio-2015-1500cc-59448",       img:"" },
   { id:30, brand:"Dacia",         model:"Sandero 1.0 TCe 100 LPG",             year:2023, km:84000,  price:14500, fuel:"LPG/Αέριο",     trans:"Χειροκίνητο", body:"Hatchback",  seats:5, url:"https://npoulakis.gr/used/car/dacia-sandero-2023-1000cc-59416",       img:"" },
   { id:31, brand:"Nissan",        model:"Juke Hybrid Full Extra",               year:2023, km:23000,  price:23990, fuel:"Full Hybrid",   trans:"Αυτόματο",    body:"Crossover",  seats:5, url:"https://npoulakis.gr/used/car/nissan-juke-2023-1600cc-59417",         img:"" },
@@ -66,11 +66,64 @@ const CARS = [
   { id:46, brand:"Renault",       model:"Twingo 1.0 SCe 68",                    year:2016, km:143000, price:8500,  fuel:"Βενζίνη",       trans:"Χειροκίνητο", body:"Hatchback",  seats:5, url:"https://npoulakis.gr/used/car/renault-twingo-2016-1000cc-59439",       img:"" },
 ];
 
-const INVENTORY_TEXT = CARS.map(c =>
-  `ID:${c.id} | ${c.brand} ${c.model} | ${c.year} | ${c.km === 0 ? "0 χλμ (Νέο)" : c.km.toLocaleString("el-GR") + " χλμ"} | €${c.price.toLocaleString("el-GR")} | ${c.fuel} | ${c.trans} | ${c.body} | ${c.seats} θέσεις`
-).join("\n");
+// Parses Greek-formatted numbers: "15.000" → 15000, "15,5" → 15.5
+function parseGreekNumber(s) {
+  return parseFloat(s.replace(/\./g, "").replace(",", "."));
+}
 
-const SYSTEM_PROMPT = `Είσαι ο "AI Poulakis", ο έξυπνος βοηθός αγοράς οχήματος της **Autounit N. Poulakis**, εξουσιοδοτημένου αντιπροσώπου Renault & Dacia στο Χαϊδάρι Αθήνας (Λεωφ. Αθηνών 243Α, τηλ: 210-5820821).
+// Extracts the maximum budget from conversation messages
+function extractBudget(messages) {
+  const userText = messages
+    .filter(m => m.role === "user")
+    .map(m => m.content)
+    .join(" ");
+
+  // Range pattern: €10.000-€17.000 or 10000–17000 → upper bound is the budget
+  const rangeMatch = userText.match(/€?\s*([\d.]+)\s*[-–]\s*€?\s*([\d.]+)/);
+  if (rangeMatch) {
+    const upper = parseGreekNumber(rangeMatch[2]);
+    if (upper > 1000) return upper;
+  }
+
+  // Keyword + number: "budget 15000", "μέχρι €15.000", "έως 20000", "γύρω στα 12000"
+  const keywordMatch = userText.match(
+    /(?:budget|προϋπολογισμ[οό][ς]?|μέχρι|έως|ως|γύρω στα?|περίπου|κοντά στα?)\s*:?\s*€?\s*([\d.]+)/i
+  );
+  if (keywordMatch) {
+    const val = parseGreekNumber(keywordMatch[1]);
+    if (val > 1000) return val;
+  }
+
+  // €number or number€ / ευρώ
+  const euroMatch = userText.match(/€\s*([\d.]+)|([\d.]+)\s*(?:€|ευρώ)/i);
+  if (euroMatch) {
+    const val = parseGreekNumber(euroMatch[1] || euroMatch[2]);
+    if (val > 1000) return val;
+  }
+
+  return null;
+}
+
+// Returns true if the last user message is a "show above budget" follow-up
+// after a "no cars found" bot reply
+function isAboveBudgetFollowUp(messages) {
+  const lastUserMsg = [...messages].reverse().find(m => m.role === "user")?.content?.toLowerCase() || "";
+  const lastBotMsg = [...messages].reverse().find(m => m.role === "assistant")?.content?.toLowerCase() || "";
+
+  if (!lastBotMsg.includes("δεν βρέθηκε αμάξι")) return false;
+  return /πιο πάνω|ακριβ[οό]τερ|παραπάνω|πάνω|ναι/.test(lastUserMsg);
+}
+
+// Returns true if the last user message is a "show below/cheaper" follow-up
+function isBelowBudgetFollowUp(messages) {
+  const lastUserMsg = [...messages].reverse().find(m => m.role === "user")?.content?.toLowerCase() || "";
+  const lastBotMsg = [...messages].reverse().find(m => m.role === "assistant")?.content?.toLowerCase() || "";
+
+  if (!lastBotMsg.includes("δεν βρέθηκε αμάξι")) return false;
+  return /πιο κάτω|φθηνότερ|κάτω|λιγότερ/.test(lastUserMsg);
+}
+
+const BASE_SYSTEM_PROMPT = `Είσαι ο "AI Poulakis", ο έξυπνος βοηθός αγοράς οχήματος της **Autounit N. Poulakis**, εξουσιοδοτημένου αντιπροσώπου Renault & Dacia στο Χαϊδάρι Αθήνας (Λεωφ. Αθηνών 243Α, τηλ: 210-5820821).
 
 ## Αποστολή σου
 Βοηθάς τον χρήστη να βρει το ιδανικό αυτοκίνητο από το τρέχον απόθεμα μέσω φυσικής συνομιλίας. Μιλάς ΠΑΝΤΑ Ελληνικά, φιλικά και επαγγελματικά.
@@ -85,12 +138,6 @@ const SYSTEM_PROMPT = `Είσαι ο "AI Poulakis", ο έξυπνος βοηθό
 - Εξήγησε σύντομα ΓΙΑΤΙ προτείνεις κάθε αμάξι (τιμή, καύσιμο, τύπος)
 - Αν ρωτηθείς για διαφορές τεχνολογιών (LPG vs βενζίνη, hybrid κλπ), εξήγησε απλά
 
-## Κανόνες Budget & Κατηγορία
-1. **Εντός budget**: Πρότεινε τα καλύτερα αμάξια εντός budget πρώτα.
-2. **Δεν υπάρχει τίποτα εντός budget**: Πρότεινε το **φθηνότερο** που ξεπερνά λίγο το budget (max +20%) — πες ευθέως π.χ. "Δεν έχω κάτι στα €8.000, αλλά αυτό είναι μόνο €500 παραπάνω και αξίζει."
-3. **Κατηγορία δεν υπάρχει**: Αν δεν υπάρχει η ακριβής κατηγορία (π.χ. diesel SUV), πρότεινε την πιο κοντινή εναλλακτική (π.χ. hybrid crossover) και εξήγησε γιατί είναι καλή επιλογή.
-4. Μην προτείνεις ποτέ αμάξια >30% πάνω από το budget χωρίς να ρωτήσεις τον χρήστη.
-
 ## Μορφή απάντησης — ΠΑΝΤΑ έγκυρο JSON
 Απάντα ΠΑΝΤΑ με αυτή ακριβώς τη δομή JSON:
 {
@@ -98,10 +145,7 @@ const SYSTEM_PROMPT = `Είσαι ο "AI Poulakis", ο έξυπνος βοηθό
   "car_ids": [1, 5, 12]
 }
 - "car_ids": array με IDs αμαξιών που προτείνεις (μέγιστο 4). Άδειο array [] αν δεν προτείνεις ακόμα.
-- Μην επαναλαμβάνεις τα specs στο reply — οι κάρτες τα δείχνουν αυτόματα.
-
-## Τρέχον απόθεμα (${CARS.length} οχήματα)
-${INVENTORY_TEXT}`;
+- Μην επαναλαμβάνεις τα specs στο reply — οι κάρτες τα δείχνουν αυτόματα.`;
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -121,13 +165,59 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "Invalid messages" });
   }
 
+  // --- Budget filtering logic ---
+  const budget = extractBudget(messages);
+
+  let carsToUse = CARS;
+  let budgetNote = "";
+
+  if (budget) {
+    const withinBudget = CARS.filter(c => c.price <= budget);
+
+    if (isAboveBudgetFollowUp(messages)) {
+      // User said "πιο πάνω" after "no cars found" → show cheapest cars above budget
+      const aboveBudget = CARS.filter(c => c.price > budget).sort((a, b) => a.price - b.price).slice(0, 6);
+      carsToUse = aboveBudget;
+      budgetNote = `\n\n## Εμφάνιση αμαξιών πάνω από budget\nΟ χρήστης ζήτησε να δει επιλογές πάνω από το budget του (€${budget.toLocaleString("el-GR")}). Τα παρακάτω αμάξια είναι τα φθηνότερα διαθέσιμα. Ανάφερε σαφώς ότι ξεπερνούν το budget αλλά είναι οι πλησιέστερες επιλογές.`;
+
+    } else if (isBelowBudgetFollowUp(messages)) {
+      // User said "πιο κάτω" after "no cars found" → nothing cheaper exists
+      return res.status(200).json({
+        reply: "Δυστυχώς δεν έχουμε αμάξια κάτω από αυτή την τιμή. Το φθηνότερο που διαθέτουμε είναι **" +
+          CARS.reduce((min, c) => c.price < min.price ? c : min, CARS[0]).brand + " " +
+          CARS.reduce((min, c) => c.price < min.price ? c : min, CARS[0]).model +
+          " στα €" + CARS.reduce((min, c) => c.price < min.price ? c : min, CARS[0]).price.toLocaleString("el-GR") +
+          "**. Θέλεις να το δεις;",
+        car_ids: [CARS.reduce((min, c) => c.price < min.price ? c : min, CARS[0]).id],
+      });
+
+    } else if (withinBudget.length === 0) {
+      // No cars within budget → ask if they want above or below
+      return res.status(200).json({
+        reply: `Δεν βρέθηκε αμάξι στο budget που ζήτησες (€${budget.toLocaleString("el-GR")}). Θες να δούμε κάποιο πιο πάνω ή πιο κάτω;`,
+        car_ids: [],
+      });
+
+    } else {
+      // Cars found within budget → use only those
+      carsToUse = withinBudget;
+      budgetNote = `\n\n## ΑΥΣΤΗΡΟ Budget: €${budget.toLocaleString("el-GR")}\nΠΡΟΤΕΙΝΕ ΜΟΝΟ αμάξια από τη λίστα παρακάτω. Όλα έχουν τιμή ≤ €${budget.toLocaleString("el-GR")}. Μην αναφέρεις ούτε μην προτείνεις αμάξια εκτός αυτής της λίστας.`;
+    }
+  }
+
+  const inventoryText = carsToUse.map(c =>
+    `ID:${c.id} | ${c.brand} ${c.model} | ${c.year} | ${c.km === 0 ? "0 χλμ (Νέο)" : c.km.toLocaleString("el-GR") + " χλμ"} | €${c.price.toLocaleString("el-GR")} | ${c.fuel} | ${c.trans} | ${c.body} | ${c.seats} θέσεις`
+  ).join("\n");
+
+  const systemPrompt = `${BASE_SYSTEM_PROMPT}${budgetNote}\n\n## Τρέχον απόθεμα (${carsToUse.length} οχήματα)\n${inventoryText}`;
+
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
   try {
     const completion = await openai.chat.completions.create({
       model: process.env.OPENAI_MODEL || "gpt-4o-mini",
       messages: [
-        { role: "system", content: SYSTEM_PROMPT },
+        { role: "system", content: systemPrompt },
         ...messages,
       ],
       response_format: { type: "json_object" },
@@ -144,11 +234,13 @@ export default async function handler(req, res) {
       parsed = { reply: raw, car_ids: [] };
     }
 
-    // Ασφάλεια: car_ids πρέπει να είναι array αριθμών
     if (!Array.isArray(parsed.car_ids)) parsed.car_ids = [];
+
+    // Validate IDs and enforce budget: only allow IDs from carsToUse
+    const allowedIds = new Set(carsToUse.map(c => c.id));
     parsed.car_ids = parsed.car_ids
       .map(Number)
-      .filter(n => !isNaN(n) && n >= 1 && n <= CARS.length);
+      .filter(n => !isNaN(n) && allowedIds.has(n));
 
     return res.status(200).json(parsed);
   } catch (err) {
