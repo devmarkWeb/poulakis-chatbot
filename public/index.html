@@ -608,8 +608,95 @@ header::after {
   .input-inner { padding: 8px 8px 8px 14px; gap: 8px; }
   .input-search-icon { display: none; }
   #sendBtn { width: 44px; height: 44px; }
+
+  .price-row { flex-direction: column; align-items: stretch; }
+  .price-find-btn { width: 100%; }
 }
 
+</style>
+
+<!-- ══ PRICE WIDGET ══ -->
+<style>
+.price-widget {
+  background: rgba(10,16,34,.82);
+  border: 1px solid rgba(246,198,74,.28);
+  border-radius: 20px;
+  padding: 18px 20px 16px;
+  display: flex; flex-direction: column; gap: 12px;
+  width: min(520px, 100%);
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 12px 36px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.05);
+}
+.price-widget-label {
+  font-size: .75rem; font-weight: 700;
+  color: var(--gold); letter-spacing: .06em; text-transform: uppercase;
+}
+.price-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.price-input-wrap {
+  display: flex; align-items: center; gap: 7px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 12px; padding: 10px 14px;
+  flex: 1; min-width: 110px;
+  transition: border-color .2s, background .2s;
+}
+.price-input-wrap:focus-within {
+  border-color: rgba(246,198,74,.42);
+  background: rgba(246,198,74,.05);
+}
+.price-prefix {
+  font-size: .80rem; font-weight: 600;
+  color: var(--muted); white-space: nowrap;
+}
+.price-input-wrap input[type=number] {
+  flex: 1; min-width: 0; width: 80px;
+  background: transparent; border: none; outline: none;
+  color: var(--text); font-size: .95rem; font-family: inherit; font-weight: 600;
+}
+.price-input-wrap input[type=number]::placeholder { color: rgba(237,244,255,.26); }
+.price-input-wrap input[type=number]::-webkit-outer-spin-button,
+.price-input-wrap input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+.price-sep { color: var(--muted); font-weight: 600; flex-shrink: 0; }
+.price-find-btn {
+  background: linear-gradient(135deg, var(--gold3), var(--gold), var(--gold2));
+  color: #071024; border: none; border-radius: 12px;
+  padding: 11px 24px; font-size: .92rem; font-weight: 700;
+  cursor: pointer; font-family: inherit; white-space: nowrap;
+  box-shadow: 0 6px 18px rgba(246,198,74,.28);
+  transition: transform .18s var(--ease-spring), box-shadow .18s;
+  flex-shrink: 0;
+}
+.price-find-btn:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 10px 26px rgba(246,198,74,.42); }
+.price-find-btn:active { transform: scale(.95); }
+
+/* ══ CARDS ACTION ROW ══ */
+.cards-actions {
+  display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
+  padding-top: 4px;
+}
+.action-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  background: rgba(9,15,32,.72);
+  border: 1px solid rgba(255,255,255,.09);
+  color: rgba(237,244,255,.62);
+  padding: 11px 22px; border-radius: 999px;
+  font-size: .87rem; font-weight: 600; cursor: pointer;
+  font-family: inherit;
+  transition: all .24s var(--ease-out);
+}
+.action-btn:hover {
+  border-color: rgba(246,198,74,.45); color: var(--gold3);
+  transform: translateY(-2px); background: rgba(246,198,74,.06);
+}
+.action-btn.more-btn {
+  border-color: rgba(246,198,74,.30);
+  color: var(--gold3);
+  background: rgba(246,198,74,.07);
+}
+.action-btn.more-btn:hover {
+  background: rgba(246,198,74,.14);
+  border-color: rgba(246,198,74,.52);
+}
 </style>
 </head>
 <body>
@@ -708,6 +795,7 @@ const CARS = [
 // ── State ─────────────────────────────────────────────────
 let history = [];   // [{role, content}]
 let loading  = false;
+let lastSearchContext = null; // { condition, minPrice, maxPrice }
 
 // ── DOM helpers ───────────────────────────────────────────
 const chatEl = document.getElementById("chat");
@@ -764,7 +852,9 @@ function addChips(opts) {
     b.className = "chip"; b.textContent = o.label;
     b.onclick = () => {
       clearChips();
-      if (o.sub) {
+      if (o.action) {
+        o.action();
+      } else if (o.sub) {
         addChips(o.sub);
       } else {
         userSend(o.value);
@@ -773,6 +863,64 @@ function addChips(opts) {
     wrap.appendChild(b);
   });
   chatEl.appendChild(wrap); scrollEnd();
+}
+
+function addPriceWidget(condition) {
+  const wrap = document.createElement("div");
+  wrap.className = "chips"; wrap.id = "chips";
+  const condLabel = { new: "🆕 Καινούργιο", used: "🔄 Μεταχειρισμένο", classic: "🏛️ Κλασικό" }[condition];
+  const widget = document.createElement("div");
+  widget.className = "price-widget";
+  widget.innerHTML = `
+    <span class="price-widget-label">${condLabel} — Εύρος τιμής</span>
+    <div class="price-row">
+      <div class="price-input-wrap">
+        <span class="price-prefix">Από €</span>
+        <input type="number" id="priceFrom" placeholder="π.χ. 10000" min="0" step="500">
+      </div>
+      <span class="price-sep">—</span>
+      <div class="price-input-wrap">
+        <span class="price-prefix">Έως €</span>
+        <input type="number" id="priceTo" placeholder="π.χ. 25000" min="0" step="500">
+      </div>
+      <button class="price-find-btn" id="priceFindBtn">Εύρεση →</button>
+    </div>
+  `;
+  wrap.appendChild(widget);
+  chatEl.appendChild(wrap);
+  setTimeout(() => document.getElementById("priceFrom")?.focus(), 80);
+  document.getElementById("priceFindBtn").onclick = () => submitPriceRange(condition);
+  widget.addEventListener("keydown", e => { if (e.key === "Enter") submitPriceRange(condition); });
+  scrollEnd();
+}
+
+function submitPriceRange(condition) {
+  const from = parseInt(document.getElementById("priceFrom")?.value) || 0;
+  const to   = parseInt(document.getElementById("priceTo")?.value)   || 0;
+  if (!from && !to) { document.getElementById("priceTo")?.focus(); return; }
+  clearChips();
+  const condLabel = { new: "καινούργιο", used: "μεταχειρισμένο", classic: "κλασικό" }[condition];
+  let msg;
+  if (from && to)  msg = `Θέλω ${condLabel} αυτοκίνητο με budget από €${from.toLocaleString("el-GR")} έως €${to.toLocaleString("el-GR")}`;
+  else if (to)     msg = `Θέλω ${condLabel} αυτοκίνητο με budget έως €${to.toLocaleString("el-GR")}`;
+  else             msg = `Θέλω ${condLabel} αυτοκίνητο με budget πάνω από €${from.toLocaleString("el-GR")}`;
+  lastSearchContext = { condition, minPrice: from || 0, maxPrice: to || Infinity };
+  userSend(msg);
+}
+
+function getMoreCars(shownIds) {
+  if (!lastSearchContext) return [];
+  const { condition, minPrice, maxPrice } = lastSearchContext;
+  const shown = new Set(shownIds);
+  return CARS.filter(car => {
+    if (shown.has(car.id)) return false;
+    if (minPrice > 0 && car.price < minPrice) return false;
+    if (maxPrice < Infinity && car.price > maxPrice) return false;
+    if (condition === "new")     return car.km === 0 && car.year >= 2024;
+    if (condition === "used")    return (car.km > 0 || car.year < 2024) && car.body !== "classic";
+    if (condition === "classic") return car.body === "classic";
+    return true;
+  }).sort((a, b) => a.price - b.price);
 }
 function clearChips() { document.querySelectorAll("#chips").forEach(e => e.remove()); }
 
@@ -784,6 +932,45 @@ function fuelLabel(f) {
   return { petrol:"⛽ Βενζίνη", lpg:"🔵 LPG/Αέριο", hybrid:"🌿 Υβριδικό", electric:"⚡ Ηλεκτρικό", diesel:"🛢️ Diesel", cng:"🔵 CNG/Αέριο" }[f] || f;
 }
 
+function buildCarCard(car, rank) {
+  const isNew     = car.km === 0 && car.year >= 2024;
+  const isClassic = car.body === "classic";
+  const badge     = isClassic ? "badge-classic" : isNew ? "badge-new" : "badge-used";
+  const badgeTxt  = isClassic ? "Κλασικό"       : isNew ? "Νέο 2025"  : "Μεταχειρισμένο";
+  const kmTxt     = car.km === 0 ? "0 χλμ" : car.km.toLocaleString("el-GR") + " χλμ";
+  const transTxt  = car.trans === "auto" ? "⚙️ Αυτόματο" : "🔧 Χειροκίνητο";
+  const a = document.createElement("a");
+  a.className = "car-card";
+  a.href = car.url; a.target = "_blank"; a.rel = "noopener noreferrer";
+  a.innerHTML = `
+    <div class="cc-inner">
+      <div class="cc-img">
+        ${car.img
+          ? `<img src="${car.img}" alt="${car.brand} ${car.model}" onerror="this.parentElement.querySelector('img').replaceWith(Object.assign(document.createElement('div'),{className:'cc-img-ph',textContent:'🚗'}))">`
+          : `<div class='cc-img-ph'>🚗</div>`}
+        <span class="badge ${badge}">${badgeTxt}</span>
+      </div>
+      <div class="cc-info">
+        <div>
+          <div class="cc-name"><span class="brand">${car.brand}</span> ${car.model}
+            <span style="color:var(--muted);font-weight:400"> (${car.year})</span>
+          </div>
+          <div class="cc-price"><span class="cur">€</span>${car.price.toLocaleString("el-GR")}</div>
+        </div>
+        <div class="cc-tags">
+          <span class="tag ${fuelClass(car.fuel)}">${fuelLabel(car.fuel)}</span>
+          <span class="tag tt">${transTxt}</span>
+          <span class="tag tk">📍 ${kmTxt}</span>
+          <span class="tag ty">🪑 ${car.seats} θέσεις</span>
+        </div>
+      </div>
+      <div class="cc-arrow">→</div>
+    </div>
+    ${rank ? `<div class="cc-rank">${rank}</div>` : ""}
+  `;
+  return a;
+}
+
 function renderCards(ids) {
   if (!ids || !ids.length) return;
   const cars = ids.map(id => CARS.find(c => c.id === id)).filter(Boolean);
@@ -793,55 +980,34 @@ function renderCards(ids) {
   wrap.className = "cards-grid";
 
   const ranks = ["🥇 Καλύτερη επιλογή","🥈 2η επιλογή","🥉 3η επιλογή","👍 4η επιλογή"];
+  cars.forEach((car, i) => wrap.appendChild(buildCarCard(car, ranks[i] || "#" + (i+1))));
 
-  cars.forEach((car, i) => {
-    const isNew     = car.km < 500 && car.year >= 2024;
-    const isClassic = car.body === "classic";
-    const badge     = isClassic ? "badge-classic" : isNew ? "badge-new" : "badge-used";
-    const badgeTxt  = isClassic ? "Κλασικό"       : isNew ? "Νέο 2025"  : "Μεταχειρισμένο";
-    const kmTxt     = car.km === 0 ? "0 χλμ" : car.km.toLocaleString("el-GR") + " χλμ";
-    const transTxt  = car.trans === "auto" ? "⚙️ Αυτόματο" : "🔧 Χειροκίνητο";
+  // Action buttons row
+  const actionsRow = document.createElement("div");
+  actionsRow.className = "cards-actions";
 
-    const a = document.createElement("a");
-    a.className = "car-card";
-    a.href = car.url;
-    a.target = "_blank";
-    a.rel = "noopener noreferrer";
-    a.innerHTML = `
-      <div class="cc-inner">
-        <div class="cc-img">
-          ${car.img
-            ? `<img src="${car.img}" alt="${car.brand} ${car.model}" onerror="this.parentElement.querySelector('img').replaceWith(Object.assign(document.createElement('div'),{className:'cc-img-ph',textContent:'🚗'}))">`
-            : `<div class='cc-img-ph'>🚗</div>`}
-          <span class="badge ${badge}">${badgeTxt}</span>
-        </div>
-        <div class="cc-info">
-          <div>
-            <div class="cc-name"><span class="brand">${car.brand}</span> ${car.model}
-              <span style="color:var(--muted);font-weight:400"> (${car.year})</span>
-            </div>
-            <div class="cc-price"><span class="cur">€</span>${car.price.toLocaleString("el-GR")}</div>
-          </div>
-          <div class="cc-tags">
-            <span class="tag ${fuelClass(car.fuel)}">${fuelLabel(car.fuel)}</span>
-            <span class="tag tt">${transTxt}</span>
-            <span class="tag tk">📍 ${kmTxt}</span>
-            <span class="tag ty">🪑 ${car.seats} θέσεις</span>
-          </div>
-        </div>
-        <div class="cc-arrow">→</div>
-      </div>
-      <div class="cc-rank">${ranks[i] || "#" + (i+1)}</div>
-    `;
-    wrap.appendChild(a);
-  });
+  const moreCars = getMoreCars(ids);
+  if (moreCars.length > 0) {
+    const moreBtn = document.createElement("button");
+    moreBtn.className = "action-btn more-btn";
+    moreBtn.innerHTML = `📋 Δες περισσότερα (${moreCars.length})`;
+    moreBtn.onclick = () => {
+      moreBtn.style.display = "none";
+      moreCars.forEach(car => wrap.insertBefore(buildCarCard(car, null), actionsRow));
+      scrollEnd();
+    };
+    actionsRow.appendChild(moreBtn);
+  }
 
-  const rb = document.createElement("button");
-  rb.className = "restart-btn"; rb.innerHTML = "🔄 Νέα αναζήτηση";
-  rb.onclick = restart;
-  wrap.appendChild(rb);
+  const newBtn = document.createElement("button");
+  newBtn.className = "action-btn";
+  newBtn.innerHTML = "🔄 Νέα συζήτηση";
+  newBtn.onclick = restart;
+  actionsRow.appendChild(newBtn);
 
-  chatEl.appendChild(wrap); scrollEnd();
+  wrap.appendChild(actionsRow);
+  chatEl.appendChild(wrap);
+  scrollEnd();
 }
 
 // ── API call ──────────────────────────────────────────────
@@ -903,6 +1069,7 @@ inpEl.addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) {
 // ── Restart ───────────────────────────────────────────────
 async function restart() {
   history = [];
+  lastSearchContext = null;
   chatEl.innerHTML = "";
   await init();
 }
@@ -926,27 +1093,11 @@ async function init() {
     setLoading(false);
   }
 
-  // Αρχικά chips: πρώτα νέο/μεταχειρισμένο, μετά budget
+  // Αρχικά chips: επιλογή κατηγορίας → price widget
   addChips([
-    {
-      label: "🆕 Καινούργιο",
-      sub: [
-        { label:"💰 Έως €20.000",          value:"Θέλω καινούργιο αυτοκίνητο με budget έως €20.000" },
-        { label:"💰 €20.000 – €28.000",    value:"Θέλω καινούργιο αυτοκίνητο με budget €20.000 – €28.000" },
-        { label:"💰 €28.000 – €35.000",    value:"Θέλω καινούργιο αυτοκίνητο με budget €28.000 – €35.000" },
-        { label:"💰 Πάνω από €35.000",     value:"Θέλω καινούργιο αυτοκίνητο με budget πάνω από €35.000" },
-      ],
-    },
-    {
-      label: "🔄 Μεταχειρισμένο",
-      sub: [
-        { label:"💰 Έως €10.000",          value:"Θέλω μεταχειρισμένο αυτοκίνητο με budget έως €10.000" },
-        { label:"💰 €10.000 – €17.000",    value:"Θέλω μεταχειρισμένο αυτοκίνητο με budget €10.000 – €17.000" },
-        { label:"💰 €17.000 – €25.000",    value:"Θέλω μεταχειρισμένο αυτοκίνητο με budget €17.000 – €25.000" },
-        { label:"💰 Πάνω από €25.000",     value:"Θέλω μεταχειρισμένο αυτοκίνητο με budget πάνω από €25.000" },
-      ],
-    },
-    { label:"🏛️ Κλασικό / Συλλεκτικό", value:"Με ενδιαφέρουν κλασικά συλλεκτικά αυτοκίνητα" },
+    { label: "🆕 Καινούργιο",             action: () => addPriceWidget("new") },
+    { label: "🔄 Μεταχειρισμένο",         action: () => addPriceWidget("used") },
+    { label: "🏛️ Κλασικό / Συλλεκτικό",  action: () => addPriceWidget("classic") },
   ]);
 }
 
