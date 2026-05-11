@@ -71,18 +71,37 @@ function parseGreekNumber(s) {
   return parseFloat(s.replace(/\./g, "").replace(",", "."));
 }
 
-// Extracts the maximum budget from conversation messages
+// Extracts budget from conversation messages.
+// Returns { amount, isMinimum } or null.
+// isMinimum=true means user wants to spend AT LEAST that amount ("πάνω από €35.000").
+// isMinimum=false means user has a maximum cap ("μέχρι €35.000").
 function extractBudget(messages) {
   const userText = messages
     .filter(m => m.role === "user")
     .map(m => m.content)
     .join(" ");
 
+  // Minimum budget: "πάνω από €35.000", "τουλάχιστον €20.000", "minimum €30.000"
+  const minPhraseMatch = userText.match(
+    /(?:πάνω από|πανω απο|τουλάχιστον|τουλαχιστον|minimum|ξεκινώ από|ξεκινω απο)\s*€?\s*([\d.]+)/i
+  );
+  if (minPhraseMatch) {
+    const val = parseGreekNumber(minPhraseMatch[1]);
+    if (val > 1000) return { amount: val, isMinimum: true };
+  }
+
+  // "€35.000 και πάνω" or "35000+"
+  const minSuffixMatch = userText.match(/€?\s*([\d.]+)\s*(?:\+|και πάνω|και άνω|κι πάνω)/i);
+  if (minSuffixMatch) {
+    const val = parseGreekNumber(minSuffixMatch[1]);
+    if (val > 1000) return { amount: val, isMinimum: true };
+  }
+
   // Range pattern: €10.000-€17.000 or 10000–17000 → upper bound is the budget
   const rangeMatch = userText.match(/€?\s*([\d.]+)\s*[-–]\s*€?\s*([\d.]+)/);
   if (rangeMatch) {
     const upper = parseGreekNumber(rangeMatch[2]);
-    if (upper > 1000) return upper;
+    if (upper > 1000) return { amount: upper, isMinimum: false };
   }
 
   // Keyword + number: "budget 15000", "μέχρι €15.000", "έως 20000", "γύρω στα 12000"
@@ -91,14 +110,14 @@ function extractBudget(messages) {
   );
   if (keywordMatch) {
     const val = parseGreekNumber(keywordMatch[1]);
-    if (val > 1000) return val;
+    if (val > 1000) return { amount: val, isMinimum: false };
   }
 
-  // €number or number€ / ευρώ
+  // €number or number€ / ευρώ (fallback — treat as max)
   const euroMatch = userText.match(/€\s*([\d.]+)|([\d.]+)\s*(?:€|ευρώ)/i);
   if (euroMatch) {
     const val = parseGreekNumber(euroMatch[1] || euroMatch[2]);
-    if (val > 1000) return val;
+    if (val > 1000) return { amount: val, isMinimum: false };
   }
 
   return null;
@@ -166,42 +185,62 @@ export default async function handler(req, res) {
   }
 
   // --- Budget filtering logic ---
-  const budget = extractBudget(messages);
+  const budgetInfo = extractBudget(messages);
 
   let carsToUse = CARS;
   let budgetNote = "";
 
-  if (budget) {
-    const withinBudget = CARS.filter(c => c.price <= budget);
+  if (budgetInfo) {
+    const { amount: budget, isMinimum } = budgetInfo;
 
-    if (isAboveBudgetFollowUp(messages)) {
-      // User said "πιο πάνω" after "no cars found" → show cheapest cars above budget
-      const aboveBudget = CARS.filter(c => c.price > budget).sort((a, b) => a.price - b.price).slice(0, 6);
-      carsToUse = aboveBudget;
-      budgetNote = `\n\n## Εμφάνιση αμαξιών πάνω από budget\nΟ χρήστης ζήτησε να δει επιλογές πάνω από το budget του (€${budget.toLocaleString("el-GR")}). Τα παρακάτω αμάξια είναι τα φθηνότερα διαθέσιμα. Ανάφερε σαφώς ότι ξεπερνούν το budget αλλά είναι οι πλησιέστερες επιλογές.`;
+    if (isMinimum) {
+      // User wants cars priced AT LEAST the given amount ("πάνω από €35.000")
+      const aboveMin = CARS.filter(c => c.price >= budget);
 
-    } else if (isBelowBudgetFollowUp(messages)) {
-      // User said "πιο κάτω" after "no cars found" → nothing cheaper exists
-      return res.status(200).json({
-        reply: "Δυστυχώς δεν έχουμε αμάξια κάτω από αυτή την τιμή. Το φθηνότερο που διαθέτουμε είναι **" +
-          CARS.reduce((min, c) => c.price < min.price ? c : min, CARS[0]).brand + " " +
-          CARS.reduce((min, c) => c.price < min.price ? c : min, CARS[0]).model +
-          " στα €" + CARS.reduce((min, c) => c.price < min.price ? c : min, CARS[0]).price.toLocaleString("el-GR") +
-          "**. Θέλεις να το δεις;",
-        car_ids: [CARS.reduce((min, c) => c.price < min.price ? c : min, CARS[0]).id],
-      });
+      if (aboveMin.length === 0) {
+        const mostExpensive = CARS.reduce((max, c) => c.price > max.price ? c : max, CARS[0]);
+        return res.status(200).json({
+          reply: `Δεν έχουμε αμάξια πάνω από €${budget.toLocaleString("el-GR")}. Το ακριβότερο που διαθέτουμε αυτή τη στιγμή είναι το **${mostExpensive.brand} ${mostExpensive.model} στα €${mostExpensive.price.toLocaleString("el-GR")}**. Θέλεις να το δεις;`,
+          car_ids: [mostExpensive.id],
+        });
+      }
 
-    } else if (withinBudget.length === 0) {
-      // No cars within budget → ask if they want above or below
-      return res.status(200).json({
-        reply: `Δεν βρέθηκε αμάξι στο budget που ζήτησες (€${budget.toLocaleString("el-GR")}). Θες να δούμε κάποιο πιο πάνω ή πιο κάτω;`,
-        car_ids: [],
-      });
+      carsToUse = aboveMin;
+      budgetNote = `\n\n## Budget Ελάχιστο: €${budget.toLocaleString("el-GR")}\nΠΡΟΤΕΙΝΕ ΜΟΝΟ αμάξια από τη λίστα παρακάτω. Όλα έχουν τιμή ≥ €${budget.toLocaleString("el-GR")}. Ο χρήστης ψάχνει αμάξι με τιμή τουλάχιστον €${budget.toLocaleString("el-GR")}.`;
 
     } else {
-      // Cars found within budget → use only those
-      carsToUse = withinBudget;
-      budgetNote = `\n\n## ΑΥΣΤΗΡΟ Budget: €${budget.toLocaleString("el-GR")}\nΠΡΟΤΕΙΝΕ ΜΟΝΟ αμάξια από τη λίστα παρακάτω. Όλα έχουν τιμή ≤ €${budget.toLocaleString("el-GR")}. Μην αναφέρεις ούτε μην προτείνεις αμάξια εκτός αυτής της λίστας.`;
+      // User has a maximum cap
+      const withinBudget = CARS.filter(c => c.price <= budget);
+
+      if (isAboveBudgetFollowUp(messages)) {
+        // User said "πιο πάνω" after "no cars found" → show cheapest cars above budget
+        const aboveBudget = CARS.filter(c => c.price > budget).sort((a, b) => a.price - b.price).slice(0, 6);
+        carsToUse = aboveBudget;
+        budgetNote = `\n\n## Εμφάνιση αμαξιών πάνω από budget\nΟ χρήστης ζήτησε να δει επιλογές πάνω από το budget του (€${budget.toLocaleString("el-GR")}). Τα παρακάτω αμάξια είναι τα φθηνότερα διαθέσιμα. Ανάφερε σαφώς ότι ξεπερνούν το budget αλλά είναι οι πλησιέστερες επιλογές.`;
+
+      } else if (isBelowBudgetFollowUp(messages)) {
+        // User said "πιο κάτω" after "no cars found" → nothing cheaper exists
+        return res.status(200).json({
+          reply: "Δυστυχώς δεν έχουμε αμάξια κάτω από αυτή την τιμή. Το φθηνότερο που διαθέτουμε είναι **" +
+            CARS.reduce((min, c) => c.price < min.price ? c : min, CARS[0]).brand + " " +
+            CARS.reduce((min, c) => c.price < min.price ? c : min, CARS[0]).model +
+            " στα €" + CARS.reduce((min, c) => c.price < min.price ? c : min, CARS[0]).price.toLocaleString("el-GR") +
+            "**. Θέλεις να το δεις;",
+          car_ids: [CARS.reduce((min, c) => c.price < min.price ? c : min, CARS[0]).id],
+        });
+
+      } else if (withinBudget.length === 0) {
+        // No cars within budget → ask if they want above or below
+        return res.status(200).json({
+          reply: `Δεν βρέθηκε αμάξι στο budget που ζήτησες (€${budget.toLocaleString("el-GR")}). Θες να δούμε κάποιο πιο πάνω ή πιο κάτω;`,
+          car_ids: [],
+        });
+
+      } else {
+        // Cars found within budget → use only those
+        carsToUse = withinBudget;
+        budgetNote = `\n\n## ΑΥΣΤΗΡΟ Budget: €${budget.toLocaleString("el-GR")}\nΠΡΟΤΕΙΝΕ ΜΟΝΟ αμάξια από τη λίστα παρακάτω. Όλα έχουν τιμή ≤ €${budget.toLocaleString("el-GR")}. Μην αναφέρεις ούτε μην προτείνεις αμάξια εκτός αυτής της λίστας.`;
+      }
     }
   }
 
